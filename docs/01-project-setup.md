@@ -1,4 +1,4 @@
-# Phase 1 — Project Setup & IAM
+# Phase 1: Project Setup & IAM
 
 ## Objective
 Create a dedicated Google Cloud project for the multi-tenant SaaS network,
@@ -90,25 +90,25 @@ The full command set is in [`scripts/01-project-setup.sh`](../scripts/01-project
 ### Screenshots
 
 **Project dashboard**
-![Project dashboard](screenshots/p1-01-project-dashboard.png)
+![Project dashboard](../screenshots/01-project-dashboard.png)
 
 **Billing linked**
-![Billing linked](screenshots/p1-02-billing-linked.png)
+![Billing linked](../screenshots/02-billing-linked.png)
 
 **Enabled APIs**
-![Enabled APIs](screenshots/p1-03-apis-enabled.png)
+![Enabled APIs](../screenshots/03-apis-enabled.png)
 
 **Service account**
-![Service account](screenshots/p1-04-service-account.png)
+![Service account](../screenshots/04-service-account.png)
 
 **IAM roles**
-![IAM roles](screenshots/p1-05-iam-roles.png)
+![IAM roles](../screenshots/05-iam-roles.png)
 
 **Impersonation test**
-![Impersonation test](screenshots/p1-06-impersonation-test.png)
+![Impersonation test](../screenshots/06-impersonation-test.png)
 
 **Budget alert**
-![Budget alert](screenshots/p1-07-budget-alert.png)
+![Budget alert](../screenshots/07-budget-alert.png)
 
 ## Notes & Issues
 

@@ -1,4 +1,4 @@
-# Phase 2 — Architecture Design
+# Phase 2: Architecture Design
 
 ## Objective
 Design a multi-tenant network that isolates fintech and healthcare tenants, centralises shared services in a Shared VPC, and applies zero-trust controls to every traffic path.
@@ -14,7 +14,7 @@ Design a multi-tenant network that isolates fintech and healthcare tenants, cent
 
 ## 1. Topology
 
-![Network topology](screenshots/08-architecture-design.PNG)
+![Network topology](../screenshots/08-architecture-design.PNG)
 
 | Role | Project ID | Purpose |
 |---|---|---|
@@ -31,7 +31,7 @@ Design a multi-tenant network that isolates fintech and healthcare tenants, cent
 
 ## 2. IP Address Plan
 
-![IP allocation table](screenshots/09-ip-allocation-table.PNG)
+![IP allocation table](../screenshots/09-ip-allocation-table.PNG)
 
 | Network | Subnet | CIDR | Region |
 |---|---|---|---|
@@ -67,7 +67,7 @@ Design a multi-tenant network that isolates fintech and healthcare tenants, cent
 
 ## 4. Firewall Strategy
 
-![Firewall matrix](screenshots/10-firewall-matrix.PNG)
+![Firewall matrix](../screenshots/10-firewall-matrix.PNG)
 
 - **Default deny in both directions:** explicit deny-all rules at priority 65000 with logging on.
 - **Targets are service accounts, not network tags:** changing a VM's service account requires IAM permission, while tags don't.
