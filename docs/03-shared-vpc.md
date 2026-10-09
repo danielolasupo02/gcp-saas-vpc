@@ -78,47 +78,60 @@ Flow logs on every subnet: 5-second aggregation, 50% sampling, all metadata.
 
 ### Screenshots
 
-**Prerequisites script**
-![Prerequisites script](../screenshots/11-prereqs-script-output.png)
+#### Prerequisites
 
-**Projects under the organization**
-![Org projects](../screenshots/12-org-projects.png)
+**Prerequisites script run**
+![Prerequisites script](../screenshots/11-prereqs-script-output.PNG)
 
-**Default network removed**
-![Default network removed](../screenshots/13-default-network-removed.png)
+**Projects under the organization** (terminal and console)
+![Org projects - terminal](../screenshots/12-org-projects.PNG)
+![Org projects - console](../screenshots/12-org-projects-gui.PNG)
 
-**Terraform state bucket**
-![State bucket](../screenshots/14-state-bucket.png)
+**Default network removed from the projects** (terminal and console)
+![Default network removed - terminal](../screenshots/13-default-network-removed.PNG)
+![Default network removed - terminal (cont.)](../screenshots/13b-default-network-removed.PNG)
+![Default network removed - console](../screenshots/13b-default-network-removed-gui.PNG)
 
-**Terraform plan**
-![Terraform plan](../screenshots/15-terraform-plan.png)
+**Terraform state bucket (versioning on, not public)**
+![State bucket](../screenshots/14-state-bucket-gui.PNG)
 
-**Terraform apply**
-![Terraform apply](../screenshots/16-terraform-apply.png)
+#### Terraform
 
-**Shared VPC host**
-![Shared VPC host](../screenshots/17-shared-vpc-host.png)
+**Plan: 20 resources to add**
+![Terraform plan](../screenshots/15-terraform-plan.PNG)
+
+**Apply complete**
+![Terraform apply](../screenshots/16-terraform-apply.PNG)
+
+#### Shared VPC
+
+**Host project enabled**
+![Shared VPC host](../screenshots/17-shared-vpc-host-gui.PNG)
 
 **Attached service projects**
-![Service projects](../screenshots/18-service-projects-attached.png)
+![Service projects attached](../screenshots/18-service-projects-attached-gui.PNG)
 
-**Network details**
-![Network details](../screenshots/19-vpc-network-details.png)
+#### Network and subnets
 
-**Subnets**
-![Subnets](../screenshots/20-subnets-list.png)
+**`shared-vpc-network`: custom mode, MTU 1460, global routing**
+![Network details](../screenshots/19-vpc-network-details-gui.PNG)
+
+**All five subnets**
+![Subnets](../screenshots/20-subnets-list-gui.PNG)
 
 **Flow logs and Private Google Access**
-![Flow logs](../screenshots/21-flow-logs-pga.png)
+![Flow logs and PGA](../screenshots/21-flow-logs-pga-gui.PNG)
 
-**Subnet-level delegation**
-![Subnet IAM](../screenshots/22-subnet-iam-delegation.png)
+**Subnet-level delegation (Network User per subnet)**
+![Subnet IAM delegation](../screenshots/22-subnet-iam-delegation-gui.PNG)
 
-**Custom routes**
-![Routes](../screenshots/23-custom-routes.png)
+#### Routing
 
-**Cloud Router**
-![Cloud Router](../screenshots/24-cloud-router.png)
+**Custom static routes**
+![Custom routes](../screenshots/23-custom-routes-gui.PNG)
+
+**Cloud Router (ASN 64512, advertises 10.0.0.0/20)**
+![Cloud Router](../screenshots/24-cloud-router-gui.PNG)
 
 ## Notes & Issues
 
@@ -140,6 +153,16 @@ routes and router were created; the host enablement failed, so the service
 attachments and subnet IAM (which depend on it) never ran. Moved the project into
 the org with `gcloud beta projects move` and re-applied. Resources already in
 state were not recreated; only the remaining 11 were added.
+
+### Cloud Shell reset removed Terraform
+Cloud Shell only keeps `$HOME` between sessions. Terraform installed system-wide
+disappeared after a reset, so it was reinstalled into `~/bin` and added to `PATH`.
+
+### Destroy and rebuild hit `connection refused`
+While destroying and rebuilding to capture clean plan/apply output, some API calls
+from Cloud Shell failed with `dial tcp ...:443: connect: connection refused`. This
+was a transient network issue, not a code or permission problem. Each run recorded
+its progress in state, so re-running with `-parallelism=1` finished the job.
 
 ### Decisions
 - **Subnet-level `networkUser` instead of project-level:** prod physically cannot place a VM in a dev subnet. Isolation is enforced by IAM before any firewall rule exists.
