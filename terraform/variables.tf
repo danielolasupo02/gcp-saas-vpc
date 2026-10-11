@@ -35,3 +35,13 @@ variable "bgp_asn" {
   type        = number
   default     = 64512
 }
+
+variable "fintech_project_id" {
+  description = "Tenant project for the fintech customer."
+  type        = string
+}
+
+variable "health_project_id" {
+  description = "Tenant project for the healthcare customer."
+  type        = string
+}

@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (gitignored) and adjust if your project IDs differ.
+host_project_id            = "saas-vpc-host-2022"
+prod_service_project_id    = "saas-svc-prod-2022"
+nonprod_service_project_id = "saas-svc-nonprod-2022"
+terraform_sa_email         = "network-admin-sa@saas-vpc-host-2022.iam.gserviceaccount.com"
+primary_region             = "us-central1"
+secondary_region           = "us-east1"
+fintech_project_id = "saas-tenant-fintech-2022"
+health_project_id  = "saas-tenant-health-2022"
