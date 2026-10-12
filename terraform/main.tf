@@ -158,3 +158,38 @@ resource "google_compute_router" "bgp" {
     }
   }
 }
+
+###############################################################################
+# Phase 5 — Workload identities per environment
+#
+# Every environment's VMs run as a dedicated service account (created by
+# scripts/05-security-prereqs.sh). Firewall rules in security.tf target these
+# identities, so access follows the workload, not its IP or a network tag.
+###############################################################################
+
+locals {
+  environments = {
+    prod = {
+      cidr_block = "10.30.0.0/16"
+      sa         = "sa-prod-app@${var.prod_service_project_id}.iam.gserviceaccount.com"
+      priority   = 1000
+    }
+    staging = {
+      cidr_block = "10.20.0.0/16"
+      sa         = "sa-staging-app@${var.nonprod_service_project_id}.iam.gserviceaccount.com"
+      priority   = 1010
+    }
+    dev = {
+      cidr_block = "10.10.0.0/16"
+      sa         = "sa-dev-app@${var.nonprod_service_project_id}.iam.gserviceaccount.com"
+      priority   = 1020
+    }
+  }
+
+  env_sas         = [for e in local.environments : e.sa]
+  env_cidrs       = [for e in local.environments : e.cidr_block]
+  nonprod_cidrs   = [local.environments.staging.cidr_block, local.environments.dev.cidr_block]
+  tenant_cidrs    = [for t in local.tenants : t.reserved_block]
+  private_ranges  = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  google_apis_vip = "199.36.153.8/30"
+}

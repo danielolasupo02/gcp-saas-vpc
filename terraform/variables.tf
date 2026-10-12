@@ -45,3 +45,8 @@ variable "health_project_id" {
   description = "Tenant project for the healthcare customer."
   type        = string
 }
+
+variable "org_id" {
+  description = "Organization ID (for hierarchical firewall policy and org policies)."
+  type        = string
+}

@@ -42,3 +42,29 @@ output "peering_states" {
     (google_compute_network_peering.health_to_shared.name)  = google_compute_network_peering.health_to_shared.state
   }
 }
+
+output "org_firewall_policy" {
+  description = "Hierarchical firewall policy attached to the organization."
+  value       = google_compute_firewall_policy.org_baseline.short_name
+}
+
+output "org_policies_enforced" {
+  description = "Organization policy constraints enforced by Terraform."
+  value = concat(
+    [for c, _ in google_org_policy_policy.boolean : c],
+    [google_org_policy_policy.no_external_ip.name, google_org_policy_policy.restrict_peering.name]
+  )
+}
+
+output "private_dns_zones" {
+  description = "Private DNS zones and the networks that can see them."
+  value = {
+    (google_dns_managed_zone.private_googleapis.dns_name) = "Private Google Access VIP"
+    (google_dns_managed_zone.internal.dns_name)           = "Internal service names"
+  }
+}
+
+output "shared_api_ip" {
+  description = "Reserved internal IP behind api.saas.internal."
+  value       = google_compute_address.shared_api.address
+}
