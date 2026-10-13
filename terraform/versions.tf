@@ -6,5 +6,10 @@ terraform {
       source  = "hashicorp/google"
       version = ">= 6.0, < 8.0"
     }
+    # Phase 6: generates the HA VPN pre-shared key (never written to the repo)
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.5"
+    }
   }
 }

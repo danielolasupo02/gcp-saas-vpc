@@ -50,3 +50,15 @@ variable "org_id" {
   description = "Organization ID (for hierarchical firewall policy and org policies)."
   type        = string
 }
+
+variable "onprem_bgp_asn" {
+  description = "Private ASN for the simulated on-prem Cloud Router."
+  type        = number
+  default     = 64513
+}
+
+variable "enable_hybrid_vpn" {
+  description = "Create the HA VPN to the simulated on-prem network. Set false to remove it and stop tunnel charges."
+  type        = bool
+  default     = true
+}

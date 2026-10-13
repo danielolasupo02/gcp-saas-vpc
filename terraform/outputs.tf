@@ -68,3 +68,28 @@ output "shared_api_ip" {
   description = "Reserved internal IP behind api.saas.internal."
   value       = google_compute_address.shared_api.address
 }
+
+output "nat_gateways" {
+  description = "Cloud NAT gateways: region and static egress IPs."
+  value = {
+    for name, g in module.egress : name => {
+      region = g.region
+      nat    = g.nat_name
+      ips    = g.nat_ips
+    }
+  }
+}
+
+output "hybrid_vpn" {
+  description = "HA VPN tunnels and BGP sessions to the simulated on-prem network."
+  value = var.enable_hybrid_vpn ? {
+    tunnels   = concat([for t in google_compute_vpn_tunnel.shared_to_onprem : t.name], [for t in google_compute_vpn_tunnel.onprem_to_shared : t.name])
+    bgp_peers = concat([for p in google_compute_router_peer.shared : p.name], [for p in google_compute_router_peer.onprem : p.name])
+    on_prem   = "${module.onprem_vpc.subnets["onprem-subnet"].cidr} (ASN ${var.onprem_bgp_asn})"
+  } : null
+}
+
+output "egress_dashboard" {
+  description = "Cloud Monitoring dashboard for NAT, VPN and BGP."
+  value       = "https://console.cloud.google.com/monitoring/dashboards?project=${var.host_project_id}"
+}

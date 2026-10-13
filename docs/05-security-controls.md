@@ -8,7 +8,7 @@ access to IAP, and monitor posture with Security Command Center.
 
 ## What Was Built
 
-![GCP multi-tenant network security architecture](../screenshots/gcp-multi-tenant-network-security-architecture.png)
+![GCP multi-tenant network security architecture](../screenshots/gcp-multi-tenant-network-security-architecture.PNG)
 
 49 Terraform resources: 48 created and 1 imported.
 
