@@ -47,6 +47,7 @@ module "tenant_vpc" {
       cidr        = each.value.subnet_cidr
       region      = var.primary_region
       description = "Workloads for the ${each.key} tenant"
+      flow_logs   = { flow_sampling = 1.0 } # Phase 7: regulated tenants keep every flow
     }
   }
 

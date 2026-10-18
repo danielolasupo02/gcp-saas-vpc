@@ -62,3 +62,8 @@ variable "enable_hybrid_vpn" {
   type        = bool
   default     = true
 }
+
+variable "alert_email" {
+  description = "Email address for network alert notifications (set in terraform.tfvars, not committed)."
+  type        = string
+}

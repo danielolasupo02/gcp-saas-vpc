@@ -23,21 +23,25 @@ locals {
       cidr        = "10.10.0.0/20"
       region      = var.primary_region
       description = "Development environment"
+      flow_logs   = { flow_sampling = 0.25 } # Phase 7: lower sampling, lower cost
     }
     "staging-subnet" = {
       cidr        = "10.20.0.0/20"
       region      = var.primary_region
       description = "Staging environment"
+      flow_logs   = { flow_sampling = 0.25 }
     }
     "prod-subnet" = {
       cidr        = "10.30.0.0/20"
       region      = var.primary_region
       description = "Production environment (primary region)"
+      flow_logs   = { flow_sampling = 1.0 } # Phase 7: every flow kept for audit
     }
     "prod-subnet-east" = {
       cidr        = "10.30.16.0/20"
       region      = var.secondary_region
       description = "Production environment (secondary region)"
+      flow_logs   = { flow_sampling = 1.0 }
     }
   }
 

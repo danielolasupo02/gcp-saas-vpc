@@ -29,3 +29,8 @@ output "routes" {
   description = "Custom route names."
   value       = [for r in google_compute_route.this : r.name]
 }
+
+output "flow_logs" {
+  description = "Effective flow log settings per subnet (after per-subnet overrides)."
+  value       = local.subnet_flow_logs
+}

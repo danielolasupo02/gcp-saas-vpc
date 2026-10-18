@@ -8,6 +8,19 @@ resource "google_compute_network" "this" {
   delete_default_routes_on_create = var.delete_default_routes
 }
 
+locals {
+  # Merge each subnet's overrides onto the network-wide defaults (null = keep default).
+  subnet_flow_logs = {
+    for name, s in var.subnets : name => {
+      enabled              = coalesce(s.flow_logs.enabled, var.flow_logs.enabled)
+      aggregation_interval = coalesce(s.flow_logs.aggregation_interval, var.flow_logs.aggregation_interval)
+      flow_sampling        = coalesce(s.flow_logs.flow_sampling, var.flow_logs.flow_sampling)
+      metadata             = coalesce(s.flow_logs.metadata, var.flow_logs.metadata)
+      filter_expr          = coalesce(s.flow_logs.filter_expr, var.flow_logs.filter_expr)
+    }
+  }
+}
+
 resource "google_compute_subnetwork" "this" {
   for_each = var.subnets
 
@@ -19,12 +32,15 @@ resource "google_compute_subnetwork" "this" {
   ip_cidr_range            = each.value.cidr
   private_ip_google_access = true
 
+  # Flow logs: network-wide defaults (var.flow_logs) with optional per-subnet
+  # overrides, e.g. 100% sampling on regulated subnets, lower on dev.
   dynamic "log_config" {
-    for_each = var.flow_logs.enabled ? [1] : []
+    for_each = local.subnet_flow_logs[each.key].enabled ? [local.subnet_flow_logs[each.key]] : []
     content {
-      aggregation_interval = var.flow_logs.aggregation_interval
-      flow_sampling        = var.flow_logs.flow_sampling
-      metadata             = var.flow_logs.metadata
+      aggregation_interval = log_config.value.aggregation_interval
+      flow_sampling        = log_config.value.flow_sampling
+      metadata             = log_config.value.metadata
+      filter_expr          = log_config.value.filter_expr
     }
   }
 }

@@ -140,7 +140,10 @@ failover() {
   printf '\n%-20s %s\n%-20s %s\n%-20s %s\n' "Before:" "$BEFORE" "After:" "$AFTER" "Expected after:" "$OTHER_IP"
   [[ "$AFTER" == "$OTHER_IP" ]] && echo "RESULT: PASS (prod egress failed over with no config change on the VM)" \
                                 || echo "RESULT: FAIL"
-  log "Restore with Terraform: cd ~/terraform && terraform plan   (shows the drift) && terraform apply"
+  log "Restore (2 steps - the API won't move an IP straight from drain back to active):"
+  echo "  1) gcloud compute routers nats update $NAT --router=$ROUTER --region=$REGION --project=$HOST_PROJECT \\"
+  echo "       --nat-external-ip-pool=$OTHER_NAME --clear-nat-external-drain-ip-pool"
+  echo "  2) cd ~/terraform && terraform plan   (shows the drift)  &&  terraform apply"
 }
 
 down() {

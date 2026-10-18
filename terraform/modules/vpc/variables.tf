@@ -43,6 +43,14 @@ variable "subnets" {
     cidr        = string
     region      = string
     description = optional(string, "")
+    # Per-subnet flow log overrides; anything left null uses var.flow_logs.
+    flow_logs = optional(object({
+      enabled              = optional(bool)
+      aggregation_interval = optional(string)
+      flow_sampling        = optional(number)
+      metadata             = optional(string)
+      filter_expr          = optional(string)
+    }), {})
   }))
 }
 
@@ -53,8 +61,14 @@ variable "flow_logs" {
     aggregation_interval = optional(string, "INTERVAL_5_SEC")
     flow_sampling        = optional(number, 0.5)
     metadata             = optional(string, "INCLUDE_ALL_METADATA")
+    filter_expr          = optional(string, "true") # CEL filter; "true" logs every sampled flow
   })
   default = {}
+
+  validation {
+    condition     = var.flow_logs.flow_sampling > 0 && var.flow_logs.flow_sampling <= 1
+    error_message = "flow_sampling must be greater than 0 and at most 1."
+  }
 }
 
 variable "routes" {

@@ -93,3 +93,24 @@ output "egress_dashboard" {
   description = "Cloud Monitoring dashboard for NAT, VPN and BGP."
   value       = "https://console.cloud.google.com/monitoring/dashboards?project=${var.host_project_id}"
 }
+
+output "flow_log_sampling" {
+  description = "Effective flow log sampling per subnet."
+  value = merge(
+    { for s, c in module.shared_vpc.flow_logs : s => c.flow_sampling },
+    { for t, v in module.tenant_vpc : "${t}-subnet" => v.flow_logs["${t}-subnet"].flow_sampling },
+  )
+}
+
+output "log_exports" {
+  description = "Where network logs are exported."
+  value = {
+    flow_logs_bigquery = module.logging.flow_dataset
+    audit_archive_gcs  = module.logging.archive_bucket
+  }
+}
+
+output "alert_policies" {
+  description = "Network alert policies."
+  value       = module.monitoring.alert_policies
+}
