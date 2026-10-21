@@ -144,8 +144,9 @@ crash, run `terraform force-unlock <ID>`.
 ### Last drill
 | Date | Test | Result | RTO |
 |---|---|---|---|
-| _pending_ | DR readiness matrix | | n/a |
-| _pending_ | Firewall rule deletion drill | | |
+| 2026-10-20 | DR readiness matrix (`08-dr-test.sh test`) | 8/8 PASS: DR region serves prod, shared services and tenants with no config change; tenant DR egress off (pilot light) | n/a |
+| 2026-10-20 | Firewall rule deletion drill (`08-dr-test.sh drill`) | PASS: `allow-shared-svc-callbacks` deleted in fintech, impact confirmed (BLOCKED), found by `backup_config.sh diff`, drift alert fired (`v1.compute.firewalls.delete`), restored by Terraform (OPEN) | **249 s** (target < 15 min) |
+| 2026-10-20 | Config backup + verify | 62 files exported, 4 expected export errors (no Cloud DNS in service projects), all checksums match | n/a |
 
 ## Contacts and access
 - **Network owner:** platform team (repo admins on GitHub).

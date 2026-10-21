@@ -8,7 +8,7 @@ shared services. Make NAT failover a tested, documented procedure.
 
 ## What Was Built
 
-![GCP Shared VPC Cloud NAT and HA VPN architecture](../screenshots/gcp-shared-vpc-nat-ha-vpn-architecture.png)
+![GCP Shared VPC Cloud NAT and HA VPN architecture](../screenshots/gcp-shared-vpc-nat-ha-vpn-architecture.PNG)
 
 42 Terraform resources, plus a reusable `modules/egress` module (router, static IPs, NAT).
 
