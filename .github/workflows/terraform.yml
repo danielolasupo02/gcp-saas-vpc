@@ -1,0 +1,149 @@
+# Terraform CI/CD for the network (Phase 8)
+#
+#   pull_request -> fmt, validate, plan; plan summary posted to the PR
+#   push to main -> plan, then apply after approval (GitHub environment "production")
+#   daily 06:00 UTC (07:00 WAT) -> drift check (fails if live config differs from main)
+#                                + network config backup to the DR-region bucket
+#
+# Authentication is keyless: GitHub OIDC -> Workload Identity Federation ->
+# github-ci-sa -> impersonates network-admin-sa (see scripts/08-cicd-prereqs.sh).
+name: terraform
+
+on:
+  pull_request:
+    paths: ["terraform/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["terraform/**", ".github/workflows/terraform.yml"]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write       # lets the job request a GitHub OIDC token
+  pull-requests: write  # plan summary comment on PRs
+
+concurrency:
+  group: terraform-network
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VERSION: "1.16.5"
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    outputs:
+      exitcode: ${{ steps.plan.outputs.exitcode }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SA }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Format
+        run: terraform fmt -check -recursive -diff
+
+      - name: Init
+        run: terraform init -no-color
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Plan
+        id: plan
+        run: |
+          cp terraform.tfvars.example terraform.tfvars
+          set +e
+          terraform plan -no-color -lock-timeout=5m -detailed-exitcode \
+            -var="alert_email=${{ secrets.ALERT_EMAIL }}" > plan.txt 2>&1
+          code=$?
+          set -e
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          cat plan.txt
+          {
+            echo "### Terraform plan (exit code $code: 0 = no changes, 2 = changes)"
+            echo '```'
+            grep -E '^(Plan:|No changes|  # )' plan.txt || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -eq 1 ]; then exit 1; fi
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const lines = fs.readFileSync('terraform/plan.txt', 'utf8').split('\n')
+              .filter(l => /^(Plan:|No changes|  # )/.test(l));
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+              body: '### Terraform plan\n```\n' + (lines.join('\n') || 'see job log') + '\n```'
+            });
+
+      - name: Fail on drift (scheduled run)
+        if: github.event_name == 'schedule' && steps.plan.outputs.exitcode == '2'
+        run: |
+          echo "::error::Drift detected: live network config differs from main. Run terraform plan locally."
+          exit 1
+
+  apply:
+    needs: plan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.plan.outputs.exitcode == '2'
+    runs-on: ubuntu-latest
+    environment: production   # requires a reviewer to approve before this job starts
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SA }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Apply
+        run: |
+          cp terraform.tfvars.example terraform.tfvars
+          terraform init -no-color
+          terraform apply -no-color -auto-approve -lock-timeout=5m \
+            -var="alert_email=${{ secrets.ALERT_EMAIL }}"
+
+  backup:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Back up network config
+        run: |
+          gcloud config set auth/impersonate_service_account \
+            network-admin-sa@saas-vpc-host-2022.iam.gserviceaccount.com
+          bash scripts/backup_config.sh backup

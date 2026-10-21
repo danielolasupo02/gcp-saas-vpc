@@ -19,12 +19,14 @@ locals {
       subnet_cidr    = "10.100.0.0/20"
       reserved_block = "10.100.0.0/16"
       fw_priority    = 2000
+      dr_subnet_cidr = "10.100.16.0/20" # Phase 8: standby subnet in the DR region
     }
     health = {
       project_id     = var.health_project_id
       subnet_cidr    = "10.110.0.0/20"
       reserved_block = "10.110.0.0/16"
       fw_priority    = 2010
+      dr_subnet_cidr = "10.110.16.0/20"
     }
   }
 }
@@ -41,6 +43,7 @@ module "tenant_vpc" {
   routing_mode          = "REGIONAL"
   mtu                   = 1460 # must match the shared VPC
   delete_default_routes = true
+  required_regions      = [var.primary_region, var.secondary_region]
 
   subnets = {
     "${each.key}-subnet" = {
@@ -48,6 +51,12 @@ module "tenant_vpc" {
       region      = var.primary_region
       description = "Workloads for the ${each.key} tenant"
       flow_logs   = { flow_sampling = 1.0 } # Phase 7: regulated tenants keep every flow
+    }
+    "${each.key}-subnet-east" = {
+      cidr        = each.value.dr_subnet_cidr
+      region      = var.secondary_region
+      description = "DR standby for the ${each.key} tenant"
+      flow_logs   = { flow_sampling = 1.0 }
     }
   }
 

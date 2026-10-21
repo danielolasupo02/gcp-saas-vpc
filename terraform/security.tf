@@ -120,8 +120,8 @@ resource "google_compute_firewall_policy_association" "org" {
 
 locals {
   boolean_org_policies = {
-    "compute.requireOsLogin"              = "SSH keys tied to IAM identities, not loose metadata keys"
-    "compute.skipDefaultNetworkCreation"  = "New projects never get the permissive 'default' network"
+    "compute.requireOsLogin"               = "SSH keys tied to IAM identities, not loose metadata keys"
+    "compute.skipDefaultNetworkCreation"   = "New projects never get the permissive 'default' network"
     "iam.disableServiceAccountKeyCreation" = "No long-lived service account keys; impersonation only"
   }
 }
@@ -317,7 +317,7 @@ resource "google_compute_firewall" "shared_allow_egress_to_shared_svc" {
   network                 = module.shared_vpc.network_self_link
   direction               = "EGRESS"
   priority                = 1020
-  destination_ranges      = [local.shared_subnets["shared-svc-subnet"].cidr]
+  destination_ranges      = local.shared_svc_ranges
   target_service_accounts = local.env_sas
 
   allow {
@@ -432,7 +432,7 @@ resource "google_compute_firewall" "tenant_allow_egress_to_shared_svc" {
   network            = module.tenant_vpc[each.key].network_self_link
   direction          = "EGRESS"
   priority           = 2000
-  destination_ranges = [local.shared_subnets["shared-svc-subnet"].cidr]
+  destination_ranges = local.shared_svc_ranges
 
   allow {
     protocol = "tcp"

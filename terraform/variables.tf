@@ -67,3 +67,9 @@ variable "alert_email" {
   description = "Email address for network alert notifications (set in terraform.tfvars, not committed)."
   type        = string
 }
+
+variable "enable_dr_egress" {
+  description = "Create Cloud NAT for tenant DR subnets in the secondary region (turn on during a regional failover)."
+  type        = bool
+  default     = false
+}

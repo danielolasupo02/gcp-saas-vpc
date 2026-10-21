@@ -10,3 +10,4 @@ health_project_id          = "saas-tenant-health-2022"
 org_id                     = "172544480375"
 enable_hybrid_vpn          = false
 alert_email                = "you@example.com"
+enable_dr_egress           = false

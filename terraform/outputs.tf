@@ -98,7 +98,7 @@ output "flow_log_sampling" {
   description = "Effective flow log sampling per subnet."
   value = merge(
     { for s, c in module.shared_vpc.flow_logs : s => c.flow_sampling },
-    { for t, v in module.tenant_vpc : "${t}-subnet" => v.flow_logs["${t}-subnet"].flow_sampling },
+    [for t, v in module.tenant_vpc : { for s, c in v.flow_logs : s => c.flow_sampling }]...
   )
 }
 
@@ -113,4 +113,14 @@ output "log_exports" {
 output "alert_policies" {
   description = "Network alert policies."
   value       = module.monitoring.alert_policies
+}
+
+output "dr_readiness" {
+  description = "Regions each network covers and where config backups live."
+  value = {
+    shared_vpc_regions = module.shared_vpc.regions
+    tenant_regions     = { for t, v in module.tenant_vpc : t => v.regions }
+    dr_egress_enabled  = var.enable_dr_egress
+    config_backups     = "gs://${google_storage_bucket.config_backups.name}"
+  }
 }

@@ -94,7 +94,7 @@ resource "google_compute_firewall" "tenant_allow_shared_svc_callbacks" {
   network       = module.tenant_vpc[each.key].network_self_link
   direction     = "INGRESS"
   priority      = 2000
-  source_ranges = [local.shared_subnets["shared-svc-subnet"].cidr]
+  source_ranges = local.shared_svc_ranges
 
   allow {
     protocol = "tcp"

@@ -73,9 +73,24 @@ locals {
   }
 }
 
+# Phase 8: DR egress for tenants. Off by default (static IPs cost money);
+# a regional failover flips enable_dr_egress = true and applies.
+locals {
+  dr_nat_gateways = var.enable_dr_egress ? {
+    for t, cfg in local.tenants : "${t}-east" => {
+      project     = cfg.project_id
+      network     = module.tenant_vpc[t].network_self_link
+      region      = var.secondary_region
+      subnetworks = [module.tenant_vpc[t].subnets["${t}-subnet-east"].self_link]
+      ip_count    = 1
+      log_filter  = "ERRORS_ONLY"
+    }
+  } : {}
+}
+
 module "egress" {
   source   = "./modules/egress"
-  for_each = local.nat_gateways
+  for_each = merge(local.nat_gateways, local.dr_nat_gateways)
 
   project_id   = each.value.project
   name         = each.key

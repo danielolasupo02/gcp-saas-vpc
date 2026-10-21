@@ -19,6 +19,11 @@ locals {
       region      = var.primary_region
       description = "Shared services consumed by environments and tenants"
     }
+    "shared-svc-subnet-east" = {
+      cidr        = "10.0.16.0/20"
+      region      = var.secondary_region
+      description = "Phase 8: shared services standby in the DR region"
+    }
     "dev-subnet" = {
       cidr        = "10.10.0.0/20"
       region      = var.primary_region
@@ -47,6 +52,11 @@ locals {
 
   # Which service project may deploy into which subnet.
   # shared-svc-subnet is intentionally not delegated: only the host project uses it.
+  # Phase 8: shared services exist in both regions; every rule that referenced
+  # the single shared-svc range now uses both, so DR needs no firewall changes.
+  shared_svc_subnet_names = ["shared-svc-subnet", "shared-svc-subnet-east"]
+  shared_svc_ranges       = [for n in local.shared_svc_subnet_names : local.shared_subnets[n].cidr]
+
   subnet_delegation = {
     "prod-subnet"      = "prod"
     "prod-subnet-east" = "prod"
@@ -80,6 +90,7 @@ module "shared_vpc" {
   mtu                   = 1460
   delete_default_routes = true
   subnets               = local.shared_subnets
+  required_regions      = [var.primary_region, var.secondary_region] # Phase 8: plan fails if the DR region is missing
 
   flow_logs = {
     aggregation_interval = "INTERVAL_5_SEC"
@@ -155,10 +166,13 @@ resource "google_compute_router" "bgp" {
     advertise_mode     = "CUSTOM"
     keepalive_interval = 20
 
-    # On-prem only learns the shared services range, never dev/staging/prod.
-    advertised_ip_ranges {
-      range       = local.shared_subnets["shared-svc-subnet"].cidr
-      description = "shared-svc-subnet"
+    # On-prem only learns the shared services ranges (primary + DR), never dev/staging/prod.
+    dynamic "advertised_ip_ranges" {
+      for_each = toset(local.shared_svc_subnet_names)
+      content {
+        range       = local.shared_subnets[advertised_ip_ranges.value].cidr
+        description = advertised_ip_ranges.value
+      }
     }
   }
 }
