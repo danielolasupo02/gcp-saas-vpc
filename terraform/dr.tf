@@ -48,6 +48,7 @@ resource "google_storage_bucket" "config_backups" {
   }
 
   labels = {
+    owner   = "platform"
     purpose = "network-config-backup"
   }
 }
