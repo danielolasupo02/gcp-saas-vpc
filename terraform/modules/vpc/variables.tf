@@ -71,6 +71,12 @@ variable "flow_logs" {
   }
 }
 
+variable "required_regions" {
+  description = "Regions that must contain at least one subnet (primary + DR). Empty disables the check."
+  type        = list(string)
+  default     = []
+}
+
 variable "routes" {
   description = "Custom static routes keyed by name. Next hop defaults to the default internet gateway."
   type = map(object({

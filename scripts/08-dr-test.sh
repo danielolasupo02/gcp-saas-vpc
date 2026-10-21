@@ -9,6 +9,7 @@
 #
 # Needs: terraform initialised in ~/terraform (drill only) and the backup bucket.
 set -euo pipefail
+export CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
 HOST_PROJECT="saas-vpc-host-2022"
 PROD_PROJECT="saas-svc-prod-2022"

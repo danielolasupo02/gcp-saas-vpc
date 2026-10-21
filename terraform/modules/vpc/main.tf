@@ -6,6 +6,18 @@ resource "google_compute_network" "this" {
   routing_mode                    = var.routing_mode
   mtu                             = var.mtu
   delete_default_routes_on_create = var.delete_default_routes
+
+  # Phase 8: DR guardrails, checked at plan time before anything is changed.
+  lifecycle {
+    precondition {
+      condition     = length(setsubtract(toset(var.required_regions), toset([for s in var.subnets : s.region]))) == 0
+      error_message = "Network ${var.network_name} must have at least one subnet in every required region (${join(", ", var.required_regions)}). A DR region with no subnets cannot take over."
+    }
+    precondition {
+      condition     = length(distinct([for s in var.subnets : s.cidr])) == length(var.subnets)
+      error_message = "Network ${var.network_name} has two subnets with the same CIDR."
+    }
+  }
 }
 
 locals {

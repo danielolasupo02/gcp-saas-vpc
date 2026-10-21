@@ -23,6 +23,9 @@
 #                                              # or between a backup and right now
 set -uo pipefail
 
+# Never wait for interactive prompts (e.g. "API not enabled, enable it? y/N").
+export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
 ORG_ID="172544480375"
 HOST_PROJECT="saas-vpc-host-2022"
 PROJECTS=(saas-vpc-host-2022 saas-svc-prod-2022 saas-svc-nonprod-2022 saas-tenant-fintech-2022 saas-tenant-health-2022)
@@ -93,8 +96,8 @@ snapshot() { # dir : full export into dir
   api "$DIR/org/dashboards.json" "https://monitoring.googleapis.com/v1/projects/${HOST_PROJECT}/dashboards"
   run "$DIR/org/firewall-policies.yaml" gcloud compute firewall-policies list --organization="$ORG_ID"
   for FP in $(gcloud compute firewall-policies list --organization="$ORG_ID" --format='value(name)' 2>>"$ERRLOG"); do
-    run "$DIR/org/firewall-policy-${FP}-rules.yaml" gcloud compute firewall-policies rules list --firewall-policy="$FP" --organization="$ORG_ID"
-    run "$DIR/org/firewall-policy-${FP}-associations.yaml" gcloud compute firewall-policies associations list --firewall-policy="$FP" --organization="$ORG_ID"
+    # describe returns the full policy: every rule and every association
+    run "$DIR/org/firewall-policy-${FP}.yaml" gcloud compute firewall-policies describe "$FP" --organization="$ORG_ID"
   done
   run "$DIR/org/org-policies.yaml" gcloud org-policies list --organization="$ORG_ID"
   for C in $(gcloud org-policies list --organization="$ORG_ID" --format='value(constraint)' 2>>"$ERRLOG"); do

@@ -34,3 +34,8 @@ output "flow_logs" {
   description = "Effective flow log settings per subnet (after per-subnet overrides)."
   value       = local.subnet_flow_logs
 }
+
+output "regions" {
+  description = "Regions this network has subnets in."
+  value       = sort(distinct([for s in google_compute_subnetwork.this : s.region]))
+}
